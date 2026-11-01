@@ -63,6 +63,8 @@ const messageOf = (error: unknown) =>
 
 const isGone = (error: unknown) => error instanceof ApiRequestError && error.code === "not_found";
 const isConflict = (error: unknown) => error instanceof ApiRequestError && error.code === "conflict";
+/** A conflict, or a failure that may have reached the server: show what is saved now. */
+const shouldRefresh = (error: unknown) => isConflict(error) || !(error instanceof ApiRequestError);
 
 /** Line icons on a 24-pixel grid, drawn in the text color. */
 const icon = (paths: ReactNode) => (
@@ -204,7 +206,7 @@ export function Board({
     } catch (error) {
       setBookings((all) => all.filter((b) => b.id !== tempId)); // roll back
       setNotice({ kind: "error", text: messageOf(error) });
-      if (isConflict(error)) void refresh(); // show what is in the way
+      if (shouldRefresh(error)) void refresh(); // show what is in the way, or what was saved
       if (error instanceof ApiRequestError && error.code === "invalid") {
         setDraft({ ...slot, values: details, errors: error.fields }); // reopen the form with the server's messages
       }
@@ -226,7 +228,7 @@ export function Board({
         isGone(error) ? all.filter((b) => b.id !== id) : all.map((b) => (b.id === id ? before : b)), // roll back
       );
       setNotice({ kind: "error", text: messageOf(error) });
-      if (isConflict(error)) void refresh(); // show what is in the way
+      if (shouldRefresh(error)) void refresh(); // show what is in the way, or what was saved
     }
   }
 
@@ -246,6 +248,7 @@ export function Board({
       }
       setBookings((all) => [...all, before]); // roll back
       setNotice({ kind: "error", text: messageOf(error) });
+      if (shouldRefresh(error)) void refresh();
     }
   }
 
@@ -278,7 +281,7 @@ export function Board({
     reported.current = true;
   }
 
-  /** Reloads the days on screen, after a conflict showed they are out of date. */
+  /** Reloads the days on screen, after a failed write may have left them out of date. */
   async function refresh() {
     await fetchRange(range);
   }
