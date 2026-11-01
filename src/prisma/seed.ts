@@ -83,6 +83,11 @@ export async function seedDayIfEmpty(db: Db, day: number, now = new Date()): Pro
     await tx.execute(lock(db));
     const from = officeTime(day, 0, 0, now);
     const to = officeTime(day + 1, 0, 0, now);
+    // Lock the rooms in id order, as a booking write does (lockRooms in
+    // src/server/bookings.ts), so a booking made meanwhile either waits and then
+    // sees the demo day, or is committed before the check below sees it.
+    const ids = (await tx.orm.public.Room.select("id").all()).map((r) => r.id).sort();
+    for (const id of ids) await tx.orm.public.Room.where({ id }).forNoKeyUpdate().first();
     const booked = await tx.orm.public.Booking.where((b) => b.startsAt.lt(to))
       .where((b) => b.endsAt.gt(from))
       .select("id")

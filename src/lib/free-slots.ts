@@ -21,11 +21,10 @@ export function findFreeSlots(
   const found: (FreeSlot & { seats: number })[] = [];
   const earliest = startOfCurrentSlot(now);
 
-  // Day 0 is today on the office clock: earlier days cannot be booked. The API
-  // serves at most 62 days, so no window on screen is longer.
-  for (let day = 0; day <= 62; day++) {
+  // Day 0 is today on the office clock: earlier days cannot be booked. The
+  // search goes on to `to`, however far ahead the days on screen are.
+  for (let day = 0; officeTime(day, OPEN_HOUR, 0, now) < to; day++) {
     const open = officeTime(day, OPEN_HOUR, 0, now);
-    if (open >= to) break;
     const start = new Date(Math.max(+open, +from, +earliest));
     const end = new Date(Math.min(+officeTime(day, CLOSE_HOUR, 0, now), +to));
     if (start >= end) continue;

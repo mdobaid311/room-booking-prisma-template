@@ -205,7 +205,15 @@ describe.skipIf(!url)("bookings against PostgreSQL", () => {
       expect(filled.filter(Boolean)).toHaveLength(1);
       const tuesday = await db.orm.public.Booking.all();
       expect(tuesday).toHaveLength(5); // the demo day's bookings for Atlas and Borealis, the rooms that exist here
-      expect(tuesday.every((b) => b.startsAt >= tue("08:00") && b.endsAt <= tue("18:00"))).toBe(true);
+      expect(tuesday.map(({ roomId, startsAt, endsAt }) => ({ roomId, startsAt, endsAt }))).toEqual(
+        expect.arrayContaining([
+          { roomId: atlas, startsAt: tue("09:00"), endsAt: tue("09:30") },
+          { roomId: atlas, startsAt: tue("10:00"), endsAt: tue("11:30") },
+          { roomId: atlas, startsAt: tue("14:00"), endsAt: tue("15:00") },
+          { roomId: borealis, startsAt: tue("09:30"), endsAt: tue("10:30") },
+          { roomId: borealis, startsAt: tue("13:00"), endsAt: tue("13:30") },
+        ]),
+      );
     });
 
     it("leaves a day with any booking alone, and fills another day", async () => {

@@ -49,7 +49,11 @@ type Notice = { kind: "success" | "error"; text: string };
 
 const rules = bookingRules();
 const city = OFFICE_TIME_ZONE.split("/").pop()!.replaceAll("_", " ");
-const noSubscription = () => () => {};
+/** Tells React when another tab saves a booker name. */
+const subscribeToBooker = (notify: () => void) => {
+  window.addEventListener("storage", notify);
+  return () => window.removeEventListener("storage", notify);
+};
 
 const fromDTO = (b: BookingDTO): Booking => ({
   ...b,
@@ -129,6 +133,8 @@ export function Board({
     start: officeTime(0, 0, 0, start),
     end: officeTime(1, 0, 0, start),
   }));
+  // The range now, for a write that fails after the grid has moved on.
+  const rangeRef = useRef(range);
   const [draft, setDraft] = useState<BookingDraft | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [loading, setLoading] = useState(false);
@@ -137,7 +143,7 @@ export function Board({
   const loadController = useRef<AbortController | null>(null);
   // Bookings under the name this browser booked with last are drawn as yours.
   // The server has no localStorage, so it renders none as yours.
-  const me = useSyncExternalStore(noSubscription, rememberedBooker, () => "");
+  const me = useSyncExternalStore(subscribeToBooker, rememberedBooker, () => "");
 
   // The room statuses say "free" or "in use" on the minute.
   useEffect(() => {
@@ -276,6 +282,7 @@ export function Board({
 
   /** The grid moved to another day or week: load it. The first day came with the page. */
   function onRangeChange(next: VisibleRange) {
+    rangeRef.current = next;
     setRange(next);
     if (reported.current) void fetchRange(next);
     reported.current = true;
@@ -283,12 +290,15 @@ export function Board({
 
   /** Reloads the days on screen, after a failed write may have left them out of date. */
   async function refresh() {
-    await fetchRange(range);
+    await fetchRange(rangeRef.current);
   }
 
-  /** Every booking on screen, as one calendar file. */
+  /** Every saved booking on screen, as one calendar file: one still saving may yet be refused. */
   function exportShown() {
-    const shown = events.filter((e) => e.startDate < range.end && e.endDate > range.start);
+    const shown = events.filter(
+      (e) =>
+        !bookings.some((b) => b.id === e.id && b.pending) && e.startDate < range.end && e.endDate > range.start,
+    );
     saveCalendar("room-bookings.ics", eventsToICS(shown, { resources, name: "Meeting rooms" }));
   }
 
