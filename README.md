@@ -3,7 +3,7 @@
 Book meeting rooms on a timeline, and never book the same room twice. A
 production-ready starter built end to end on the Prisma platform:
 
-- **[Resource Scheduler](https://www.npmjs.com/package/resource-scheduler)** for the room timeline: drag to book, move and resize, with a red footprint before you drop on a taken slot.
+- **[Resource Scheduler](https://resource-scheduler-docs.vercel.app/)** ([npm](https://www.npmjs.com/package/resource-scheduler)) for the room timeline: drag to book, move and resize, with a red footprint before you drop on a taken slot.
 - **[Prisma ORM](https://www.prisma.io/orm)** 8 for typed queries and migrations.
 - **[Prisma Postgres](https://www.prisma.io/postgres)** for the data, with a database per deploy, preview and laptop.
 - **[Prisma Compute](https://www.prisma.io/compute)** to host it, declared with Prisma Composer.
