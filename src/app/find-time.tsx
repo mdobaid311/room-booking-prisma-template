@@ -22,12 +22,15 @@ export function FindTime({
   bookings,
   range,
   now,
+  loading,
   onPick,
 }: {
   rooms: RoomDTO[];
   bookings: Span[];
   range: { start: Date; end: Date };
   now: Date;
+  /** The days on screen are still loading: their bookings are not in `bookings` yet. */
+  loading: boolean;
   onPick: (room: RoomDTO, slot: FreeSlot) => void;
 }) {
   const [minutes, setMinutes] = useState(60);
@@ -36,7 +39,8 @@ export function FindTime({
 
   // The suggestions that share a time, under that time.
   const groups: { time: string; slots: FreeSlot[] }[] = [];
-  for (const slot of findFreeSlots(rooms, bookings, { from: range.start, to: range.end, minutes, seats: people, now })) {
+  const slots = loading ? [] : findFreeSlots(rooms, bookings, { from: range.start, to: range.end, minutes, seats: people, now });
+  for (const slot of slots) {
     const day = formatOfficeDay(slot.start);
     const time = `${day === today ? "" : `${day}, `}${slot.start <= now ? "Now" : formatOfficeTime(slot.start)} – ${formatOfficeTime(slot.end)}`;
     const last = groups.at(-1);
@@ -86,6 +90,8 @@ export function FindTime({
             </div>
           ))}
         </div>
+      ) : loading ? (
+        <p className="picks-empty">Loading the days on screen…</p>
       ) : (
         <p className="picks-empty">No room is free for that long on the days on screen.</p>
       )}

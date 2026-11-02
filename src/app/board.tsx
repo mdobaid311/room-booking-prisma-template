@@ -352,6 +352,7 @@ export function Board({
           bookings={bookings}
           range={range}
           now={now}
+          loading={loading}
           onPick={(room, slot) => setDraft({ resourceId: room.id, start: slot.start, end: slot.end, roomName: room.name })}
         />
         <a className="side-link" href={SOURCE_URL}>

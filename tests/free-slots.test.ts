@@ -62,16 +62,39 @@ describe("findFreeSlots", () => {
   it("opens at 08:00 in Berlin on both sides of a clock change", () => {
     const now = at("2026-10-24T04:00:00Z"); // 06:00 in Berlin, summer time; winter time starts on the 25th
     const weekend = { from: at("2026-10-23T22:00:00Z"), to: at("2026-10-25T23:00:00Z") };
+    const saturday = [{ roomId: "big", startsAt: at("2026-10-24T06:00:00Z"), endsAt: at("2026-10-24T16:00:00Z") }];
     expect(starts(findFreeSlots(rooms, [], { ...weekend, minutes: 30, seats: 12, now }))).toEqual([
       "big 2026-10-24T06:00:00.000Z",
+    ]);
+    expect(starts(findFreeSlots(rooms, saturday, { ...weekend, minutes: 30, seats: 12, now }))).toEqual([
       "big 2026-10-25T07:00:00.000Z",
     ]);
   });
 
-  it("searches a week however far ahead it is", () => {
+  it("searches a week however far ahead it is, past a day with no time free", () => {
     const week = { from: at("2027-02-01T23:00:00Z"), to: at("2027-02-08T23:00:00Z") }; // 95 days after NOW
-    expect(starts(findFreeSlots(rooms, [], { ...week, minutes: 30, seats: 12, now: NOW, limit: 1 }))).toEqual([
-      "big 2027-02-02T07:00:00.000Z",
+    const tuesday = [{ roomId: "big", startsAt: at("2027-02-02T07:00:00Z"), endsAt: at("2027-02-02T17:00:00Z") }];
+    expect(starts(findFreeSlots(rooms, tuesday, { ...week, minutes: 30, seats: 12, now: NOW }))).toEqual([
+      "big 2027-02-03T07:00:00.000Z",
+    ]);
+  });
+
+  it("offers each room once, at its first free time on the days on screen", () => {
+    const twoDays = { from: TODAY.from, to: at("2026-10-31T23:00:00Z") };
+    expect(starts(findFreeSlots(rooms, bookings, { ...twoDays, minutes: 60, seats: 1, now: NOW }))).toEqual([
+      "mid 2026-10-30T10:00:00.000Z",
+      "small 2026-10-30T11:00:00.000Z",
+      "big 2026-10-30T12:00:00.000Z",
+    ]);
+  });
+
+  it("keeps searching for a room whose first free time is on a later day", () => {
+    const booked = [{ roomId: "mid", startsAt: at("2026-10-30T06:00:00Z"), endsAt: at("2026-10-31T06:00:00Z") }];
+    const twoDays = { from: TODAY.from, to: at("2026-10-31T23:00:00Z") };
+    expect(starts(findFreeSlots(rooms, booked, { ...twoDays, minutes: 60, seats: 1, now: NOW }))).toEqual([
+      "small 2026-10-30T10:00:00.000Z",
+      "big 2026-10-30T10:00:00.000Z",
+      "mid 2026-10-31T07:00:00.000Z",
     ]);
   });
 

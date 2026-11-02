@@ -38,6 +38,7 @@ export function ThemeToggle() {
     const theme = dark ? "light" : "dark";
     chosen = theme;
     const apply = () => {
+      if (chosen !== theme) return; // a later click's transition shows its theme
       root.dataset.theme = theme;
       showThemeColor(theme);
     };
