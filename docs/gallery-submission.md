@@ -20,7 +20,7 @@ folder. So the submission is a copy of this repo, not a link to it.
 | `bunfig.toml` | `linker = "hoisted"` | none | none: it only configures `bun install`; this repo installs with npm, whose `node_modules` is already hoisted |
 | Package manager | Bun (`bun.lock`, `packageManager: bun@1.3.14`) | npm (`package-lock.json`) | none: `cloud-deploy-action` runs `npm ci` when it finds `package-lock.json` |
 | Node in CI | 22.23.2 | 24 (`.nvmrc`); the CLI needs 22.18+ (`engines` of `prisma` and `@prisma/composer`; `alchemy` beta.78 needs 22.15+) | workflow below reads `.nvmrc`; 22.23.2 passes the version checks too, untested |
-| Toolchain pins | exact (`@prisma/composer` 0.29.1, `prisma` rc.22, `@prisma/orm-postgres` rc.17, `alchemy` beta.78) | the same, plus `effect` 4.0.0-rc.115 as a direct dependency | done in `56de576` (PR #2) |
+| Toolchain pins | exact (`@prisma/composer` 0.35.0, `prisma` rc.28, `@prisma/orm-postgres` rc.20, `alchemy` beta.83) | the same, plus the scaffold's `effect` 4.0.3 overrides and `@effect/platform-node` 4.0.3 | done in `56de576` (PR #2) |
 | App dependency pins | all exact | `^` on `resource-scheduler`, `zod`, `temporal-polyfill` and dev tools | none: the lockfile pins them; optional to drop the `^` |
 | `.env.example` | `DATABASE_URL` only | `DATABASE_URL`, commented `TEST_DATABASE_URL`, `.env.local` advice | none |
 | `.gitignore`, `.gitattributes` | | covers everything the official ones do | none |
